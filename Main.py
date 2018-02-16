@@ -12,14 +12,23 @@ frames = 10
 
 #placeholders
 enc_in = tf.placeholder()
+X = tf.placeholder("float", [])
+Y = tf.placeholder("float", [])
 
-def training():
-    filename =
+c0 = tf.layers.conv2d(inputs = X,filers=64,kernel_size=3,activation = tf.nn.relu\
+kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv0")
+
+c1 = tf.layers.conv2d(inputs = c0,filers=64,kernel_size=3,activation = tf.nn.relu\
+kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
+
+c2 = tf.layers.conv2d(inputs = c1,filers=64,kernel_size=3,activation = tf.nn.relu\
+kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv2")
+
+fc0 = tf.contrib.layers.fully_connected(c2, 1, activation_fn=None)
 
 def read_data(filename):
     files = os.listdir(filename)
     inputs = []
-    counter = 0
     random.shuffle(files)
     for f in files:
         inputs.append(transform.resize(io.imread(filename + '/' + f), (64,64,3), mode='constant'))
@@ -37,7 +46,7 @@ with tf.variable_scope("Encoder") as scope:
         if f > 0:
             scope.reuse_variables()
         output, state = lstm(enc_in[f], state)
-        
+
 #decoder
 with tf.variable_scope("Decoder") as scope:
 # def decoder():
