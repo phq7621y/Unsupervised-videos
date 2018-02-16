@@ -30,13 +30,13 @@ class mylstm(RNNCell):
             B_ii = tf.get_variable("B_ii", [self.num_unit], initializer=initializer)
             W_hi = tf.get_variable("W_hi", [self.num_unit, self.num_unit], initializer=initializer)
             B_hi = tf.get_variable("B_hi", [self.num_unit], initializer=initializer)
-			
-			W_ig = tf.get_variable("W_ig", [input_size, self.num_unit], initializer=initializer)
+            
+            W_ig = tf.get_variable("W_ig", [input_size, self.num_unit], initializer=initializer)
             B_ig = tf.get_variable("B_ig", [self.num_unit], initializer=initializer)
             W_hg = tf.get_variable("W_hg", [self.num_unit, self.num_unit], initializer=initializer)
             B_hg = tf.get_variable("B_hg", [self.num_unit], initializer=initializer)
 
-			W_io = tf.get_variable("W_io", [input_size, self.num_unit], initializer=initializer)
+            W_io = tf.get_variable("W_io", [input_size, self.num_unit], initializer=initializer)
             B_io = tf.get_variable("B_io", [self.num_unit], initializer=initializer)
             W_ho = tf.get_variable("W_ho", [self.num_unit, self.num_unit], initializer=initializer)
             B_ho = tf.get_variable("B_ho", [self.num_unit], initializer=initializer)
@@ -47,7 +47,7 @@ class mylstm(RNNCell):
             o = tf.sigmoid(tf.nn.bias_add(tf.matmul(inputs, W_io), B_io) + tf.nn.bias_add(tf.matmul(h, W_ho), B_ho))
             
             c_prime = f * c + i * g
-            h_prime	= o * tf.tanh(c_prime)
+            h_prime = o * tf.tanh(c_prime)
 
             new_state = array_ops.concat([c_prime, h_prime], 1)
         return h_prime, new_state

@@ -11,7 +11,7 @@ epochs = 1000
 frames = 10
 
 #placeholders
-enc_in = tf.placeholder()
+#enc_in = tf.placeholder()
 X = tf.placeholder("float", [])
 Y = tf.placeholder("float", [])
 
@@ -26,15 +26,25 @@ kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = 
 
 fc0 = tf.contrib.layers.fully_connected(c2, 1, activation_fn=None)
 
-def read_data(filename):
-    files = os.listdir(filename)
-    inputs = []
-    random.shuffle(files)
-    for f in files:
-        inputs.append(transform.resize(io.imread(filename + '/' + f), (64,64,3), mode='constant'))
-    inputs = np.asarray(imgs)
 
-    return inputs
+
+def training():
+    #filename =
+    return
+
+def load_data():
+    data = np.load( 'data/mnist_test_seq.npy' )
+    # ['clips', 'dims', 'input_raw_data']
+
+    #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
+    data = np.reshape( data, [-1, 20, 64, 64, 1] )
+    print("loading training data: data.shape", data.shape)
+
+    input_seq = data[:, 0:10]
+    output_seq = data[:, 10:]
+
+    return input_seq, output_seq
+
 
 #encoder
 with tf.variable_scope("Encoder") as scope:
@@ -81,3 +91,5 @@ with tf.Session() as sess:
     for e in range(epochs):
 
         prediction = sess.run([pred],feed_dict = {})
+
+load_data()
