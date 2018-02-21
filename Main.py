@@ -13,7 +13,7 @@ train_output_seq = [None]
 train_future_seq = [None]
 test_input_seq = [None]
 test_output_seq = [None]
-
+test_future_seq = [None]
 
 #parameters
 batch_size = 2
@@ -42,7 +42,7 @@ fc0 = tf.contrib.layers.fully_connected(c2, 1, activation_fn=None)
 
 
 def load_data():
-    global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq
+    global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
     data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
