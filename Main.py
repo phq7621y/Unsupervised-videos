@@ -131,4 +131,16 @@ with tf.Session() as sess:
         avg_losses.append(total_loss/num_batches)
         avg_losses_future.append(total_loss_future/num_batches)
 
-        
+        #plotting the loss
+
+        plt.figure()
+        plt.plot(avg_losses)
+        plt.ylabel("losses")
+        plt.xlabel("epoch")
+        plt.show()
+
+        plt.figure()
+        plt.plot(avg_losses_future)
+        plt.ylabel("losses")
+        plt.xlabel("epoch")
+        plt.show()
