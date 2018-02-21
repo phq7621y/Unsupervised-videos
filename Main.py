@@ -128,6 +128,7 @@ with tf.Session() as sess:
                 feed_dict = {X: x_train, Y: y_train, Y_future: y_train_future})
             total_loss += batch_loss
             total_loss_future += batch_loss_future
+        print(total_loss)        
         avg_losses.append(total_loss/num_batches)
         avg_losses_future.append(total_loss_future/num_batches)
 
