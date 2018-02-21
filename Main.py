@@ -5,36 +5,44 @@ import math
 import matplotlib.pyplot as plt
 from skimage import io, transform
 
+tf.reset_default_graph()
+
 #global variables
 train_input_seq = [None]
 train_output_seq = [None]
+train_future_seq = [None]
 test_input_seq = [None]
 test_output_seq = [None]
 
 
 #parameters
-batch = 1
+batch_size = 2
 epochs = 1000
 frames = 10
+lr = 0.001
 
 #placeholders
 #enc_in = tf.placeholder()
-X = tf.placeholder(dtype = tf.float32)
-Y = tf.placeholder(dtype = tf.float32)
+X = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, 1])
+Y = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, 1])
+Y_future = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, 1])
 
-c0 = tf.layers.conv2d(inputs = X,filers=64,kernel_size=3,activation = tf.nn.relu\
+
+c0 = tf.reshape(X,[-1, 64, 64, 1])
+c0 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv0")
 
-c1 = tf.layers.conv2d(inputs = c0,filers=64,kernel_size=3,activation = tf.nn.relu\
+c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
 
-c2 = tf.layers.conv2d(inputs = c1,filers=64,kernel_size=3,activation = tf.nn.relu\
+c2 = tf.layers.conv2d(inputs = c1,filters=64,kernel_size=3,activation = tf.nn.relu, \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv2")
 
 fc0 = tf.contrib.layers.fully_connected(c2, 1, activation_fn=None)
 
+
 def load_data():
-    global train_input_seq, train_output_seq, test_input_seq, test_output_seq
+    global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq
 
     data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
@@ -42,11 +50,11 @@ def load_data():
     data = np.reshape( data, [-1, 20, 64, 64, 1] )
     print("loading training data: data.shape", data.shape)
     train_input_seq = data[0:8000, 0:10]
-    train_output_seq = data[0:8000, 10:0]
+    train_output_seq = train_input_seq[0:8000, ::-1]
     train_future_seq = data[0:8000, 10:]
     test_input_seq = data[8000:, 0:10]
-    test_output_seq = data[8000:, 10:0]
-    train_future_seq = data[0:8000,10:]
+    test_output_seq = test_input_seq[8000:, ::-1]
+    test_future_seq = data[8000:,10:]
 
     return
 
@@ -54,39 +62,45 @@ def load_data():
 #encoder
 with tf.variable_scope("Encoder") as scope:
 # def encoder():
-    lstm = tf.contrib.rnn.LSTMcell(num_units = 512)
-    state = lstm.zero_state(batch,"float")
-
+    lstm = tf.contrib.rnn.LSTMCell(num_units = 4096)
+    state = lstm.zero_state(batch_size,"float")
+    datum = tf.split(X, frames, axis = 1)
+    
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
-        output, state = lstm(X[f], state)
+        output, state = lstm(tf.reshape(datum[f], [batch_size,-1]), state)
     output_decoder = output
     state_decoder = state
     output_future = output
     state_future = state
 
 #decoder
+zero_input = tf.zeros_like(tf.reshape( datum[0], [batch_size, -1] ) , "float" ) # generate a zero array using the shape of tmp
+
 with tf.variable_scope("Decoder") as scope:
     decoder_outputs = []
-
+    
     for f in range(frames):
-        output_decoder,state_decoder = lstm(output_decoder, state_decoder)
+        output_decoder, state_decoder = lstm(zero_input, state_decoder)
         decoder_outputs.append(output_decoder)
 
 with tf.variable_scope("FuturePredictor") as scope:
     future_outputs = []
 
     for f in range(frames):
-        output_future, state_future = lstm(output_future, state_future)
+        output_future, state_future = lstm(zero_input, state_future)
         future_outputs.append(output_future)
 
 #loss and optimization
-with tf.variable_scope("Loss") as scope:
-
-    loss = tf.reduced_sum(tf.square(decoder_outputs - Y))
+#with tf.variable_scope("Loss") as scope:
+    target = tf.reshape(tf.split(Y, frames, axis = 1), [frames, batch_size, -1])
+    target_future = tf.reshape(tf.split(Y_future, frames, axis = 1), [frames, batch_size, -1])
+    loss = tf.reduce_sum(tf.square(target - decoder_outputs))
+    loss_future = tf.reduce_sum(tf.square(target_future - future_outputs))
     optim = tf.train.AdamOptimizer(lr).minimize(loss)
-
+    optim_future = tf.train.AdamOptimizer(lr).minimize(loss_future)
+    
 load_data()
 
 #starting the session
@@ -96,5 +110,9 @@ with tf.Session() as sess:
     # summary_writer = tf.summary.FileWriter(_,graph=sess.graph)
 
     for e in range(epochs):
-
-        prediction = sess.run([pred],feed_dict = {})
+        for i in range(int(len(train_input_seq)/batch_size)):
+            x_train = train_input_seq[i*batch_size:(i+1)*batch_size]
+            y_train = train_output_seq[i*batch_size:(i+1)*batch_size]
+            y_train_future = train_future_seq[i*batch_size:(i+1)*batch_size]
+            train_optim = sess.run([optim, optim_future],feed_dict = {X: x_train, Y: y_train, Y_future: y_train_future})
+            
