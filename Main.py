@@ -42,7 +42,7 @@ Y_future = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, 1])
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '../data/mnist_test_seq.npy' )
+    data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.reshape( data, [-1, 20, 64, 64, 1] )
@@ -125,7 +125,6 @@ with tf.Session() as sess:
         avg_losses_future = []
         total_loss_future = 0
         for i in range(num_batches):
-            print(i)
             x_train = train_input_seq[i*batch_size:(i+1)*batch_size]
             y_train = train_output_seq[i*batch_size:(i+1)*batch_size]
             y_train_future = train_future_seq[i*batch_size:(i+1)*batch_size]
@@ -133,7 +132,7 @@ with tf.Session() as sess:
                 feed_dict = {X: x_train, Y: y_train, Y_future: y_train_future})
             total_loss += batch_loss
             total_loss_future += batch_loss_future
-        print(total_loss)        
+        print(total_loss)
         avg_losses.append(total_loss/num_batches)
         avg_losses_future.append(total_loss_future/num_batches)
         
