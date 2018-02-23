@@ -151,4 +151,16 @@ plt.ylabel("losses")
 plt.xlabel("epoch")
 plt.show()
 
-        
+        #plotting the loss
+
+        plt.figure()
+        plt.plot(avg_losses)
+        plt.ylabel("losses")
+        plt.xlabel("epoch")
+        plt.show()
+
+        plt.figure()
+        plt.plot(avg_losses_future)
+        plt.ylabel("losses")
+        plt.xlabel("epoch")
+        plt.show()
