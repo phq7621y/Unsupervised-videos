@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 #import random
 #import math
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 #from skimage import io, transform
 
 tf.reset_default_graph()
@@ -58,7 +58,7 @@ def load_data():
 
 
 #encoder
-with tf.variable_scope("Encoder", reuse=tf.AUTO_REUSE) as scope:
+with tf.variable_scope("Encoder") as scope:
 # def encoder():
     lstm = tf.contrib.rnn.LSTMCell(num_units = 1024)
     state = lstm.zero_state(batch_size,"float")
@@ -76,7 +76,7 @@ with tf.variable_scope("Encoder", reuse=tf.AUTO_REUSE) as scope:
 #decoder
 zero_input = tf.zeros_like(tf.reshape( datum[0], [batch_size, -1] ) , "float" ) # generate a zero array using the shape of tmp
 
-with tf.variable_scope("Decoder", reuse=tf.AUTO_REUSE) as scope:
+with tf.variable_scope("Decoder") as scope:
     decoder_outputs = []
 
     for f in range(frames):
@@ -88,7 +88,7 @@ with tf.variable_scope("Decoder", reuse=tf.AUTO_REUSE) as scope:
     decoder_outputs = tf.contrib.layers.fully_connected(decoder_outputs, 4096*frames, activation_fn=None)
     decoder_outputs = tf.reshape(decoder_outputs, [batch_size, frames, -1])
 
-with tf.variable_scope("FuturePredictor", reuse=tf.AUTO_REUSE) as scope:
+with tf.variable_scope("FuturePredictor") as scope:
     future_outputs = []
 
     for f in range(frames):
@@ -142,14 +142,14 @@ with tf.Session() as sess:
 
 
 #plotting the loss
-plt.figure()
-plt.plot(avg_losses)
-plt.ylabel("losses")
-plt.xlabel("epoch")
-plt.show()
-
-plt.figure()
-plt.plot(avg_losses_future)
-plt.ylabel("losses")
-plt.xlabel("epoch")
-plt.show()
+# plt.figure()
+# plt.plot(avg_losses)
+# plt.ylabel("losses")
+# plt.xlabel("epoch")
+# plt.show()
+#
+# plt.figure()
+# plt.plot(avg_losses_future)
+# plt.ylabel("losses")
+# plt.xlabel("epoch")
+# plt.show()
