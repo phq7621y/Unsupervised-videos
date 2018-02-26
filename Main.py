@@ -80,6 +80,8 @@ with tf.variable_scope("Decoder", reuse=tf.AUTO_REUSE) as scope:
     decoder_outputs = []
 
     for f in range(frames):
+        if f > 0:
+            scope.reuse_variables()
         output_decoder, state_decoder = lstm(zero_input, state_decoder)
         decoder_outputs.append(output_decoder)
     decoder_outputs = tf.reshape(decoder_outputs,[batch_size,-1])
@@ -90,6 +92,8 @@ with tf.variable_scope("FuturePredictor", reuse=tf.AUTO_REUSE) as scope:
     future_outputs = []
 
     for f in range(frames):
+        if f > 0:
+            scope.reuse_variables()
         output_future, state_future = lstm(zero_input, state_future)
         future_outputs.append(output_future)
     future_outputs = tf.reshape(future_outputs, [batch_size, -1])
@@ -135,7 +139,7 @@ with tf.Session() as sess:
         print(total_loss)
         avg_losses.append(total_loss/num_batches)
         avg_losses_future.append(total_loss_future/num_batches)
-        
+
 
 #plotting the loss
 plt.figure()
