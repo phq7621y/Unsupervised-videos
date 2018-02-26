@@ -85,7 +85,7 @@ with tf.variable_scope("Decoder") as scope:
         output_decoder, state_decoder = lstm(zero_input, state_decoder)
         decoder_outputs.append(output_decoder)
     decoder_outputs = tf.reshape(decoder_outputs,[batch_size,-1])
-    decoder_outputs = tf.contrib.layers.fully_connected(decoder_outputs, 4096*frames, activation_fn=None)
+    decoder_outputs = tf.contrib.layers.fully_connected(decoder_outputs, 4096*frames, activation_fn=None,reuse = None)
     decoder_outputs = tf.reshape(decoder_outputs, [batch_size, frames, -1])
 
 with tf.variable_scope("FuturePredictor") as scope:
@@ -97,7 +97,7 @@ with tf.variable_scope("FuturePredictor") as scope:
         output_future, state_future = lstm(zero_input, state_future)
         future_outputs.append(output_future)
     future_outputs = tf.reshape(future_outputs, [batch_size, -1])
-    future_outputs = tf.contrib.layers.fully_connected(future_outputs, 4096*frames, activation_fn=None)
+    future_outputs = tf.contrib.layers.fully_connected(future_outputs, 4096*frames, activation_fn=None,reuse = None)
     future_outputs = tf.reshape(future_outputs, [batch_size, frames, -1])
 
 
