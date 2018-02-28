@@ -1,8 +1,9 @@
 import tensorflow as tf
 import numpy as np
+import pickle
 #import random
 #import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #from skimage import io, transform
 
 tf.reset_default_graph()
@@ -152,12 +153,14 @@ with tf.Session() as sess:
         avg_losses.append(total_loss/num_batches)
         avg_losses_future.append(total_loss_future/num_batches)
 
+
 '''
     img_pre = train_input_seq[0:batch_size]
     img, img_future = sess.run([decoder_outputs, future_outputs], feed_dict = {X: img_pre})
     
 print(iteration)
 print(avg_losses)
+
 #plotting the loss
 plt.figure()
 plt.plot(iteration, avg_losses)
@@ -193,4 +196,25 @@ future = np.concatenate(future)
 plt.imsave("Source.png", source)
 plt.imsave("Reverse.png", reverse)    
 plt.imsave("Future.png", future)
+
+### goes in a file outside supercomputer
+# with open('avg_losses','rb') as al:
+#     avg_losses = pickle.load(al)
+#
+# with open('avg_losses_future','rb') as alf:
+#     avg_losses = pickle.load(alf)
+#
+# al.close()
+# alf.close()
+
 '''
+
+with open('avg_losses', 'wb') as al:
+    pickle.dump(avg_losses, al)
+
+
+with open('avg_losses_future', 'wb') as alf:
+    pickle.dump(avg_losses_future, alf)
+
+al.close()
+alf.close()
