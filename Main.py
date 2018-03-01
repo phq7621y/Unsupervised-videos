@@ -25,13 +25,13 @@ def load_data():
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.reshape( data, [-1, 20, 64, 64, channel] )
     print("loading training data: data.shape", data.shape)
-    train_input_seq = data[0:10000, 0:10]
-    train_output_seq = train_input_seq[0:10000, ::-1]
-    train_future_seq = data[0:10000, 10:]
+    train_input_seq = data[0:9900, 0:10]
+    train_output_seq = train_input_seq[0:9900, ::-1]
+    train_future_seq = data[0:9900, 10:]
 
-    test_input_seq = data[10000:, 0:10]
-    test_output_seq = test_input_seq[10000:, ::-1]
-    test_future_seq = data[10000:,10:]
+    test_input_seq = data[9900:, 0:10]
+    test_output_seq = test_input_seq[9900:, ::-1]
+    test_future_seq = data[9900:,10:]
 
     return
 
@@ -39,7 +39,7 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 10
+epochs = 1000
 frames = 10
 lr = 0.01
 
@@ -175,9 +175,9 @@ plt.xlabel("epoch")
 plt.show()
 plt.savefig('decoder_future.png')
 
-img_pre = np.reshape( img_pre, [batch_size, frames, 64, 64, channel] )
-img = np.reshape( img, [batch_size, frames, 64, 64, channel] )
-img_future = np.reshape( img_future, [batch_size, frames, 64, 64, channel] )
+img_pre = np.reshape( img_pre, [batch_size, frames, 64, 64] )
+img = np.reshape( img, [batch_size, frames, 64, 64] )
+img_future = np.reshape( img_future, [batch_size, frames, 64, 64] )
 
 source = []
 reverse = []
