@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import pickle
+from lstm import mylstm
 #import random
 #import math
 import matplotlib.pyplot as plt
@@ -20,14 +21,14 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '/datasets/mnist_test_seq.npy' )
+    data = np.load( '../datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.reshape( data, [-1, 20, 64, 64, channel] )
     print("loading training data: data.shape", data.shape)
-    train_input_seq = data[0:9900, 0:10]
-    train_output_seq = train_input_seq[0:9900, ::-1]
-    train_future_seq = data[0:9900, 10:]
+    train_input_seq = data[0:500, 0:10]
+    train_output_seq = train_input_seq[0:500, ::-1]
+    train_future_seq = data[0:500, 10:]
 
     test_input_seq = data[9900:, 0:10]
     test_output_seq = test_input_seq[9900:, ::-1]
@@ -39,7 +40,7 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 1000
+epochs = 10
 frames = 10
 lr = 0.01
 
@@ -73,14 +74,17 @@ inp = tf.reshape(c2, [batch_size, frames, -1])
 #encoder
 with tf.variable_scope("Encoder") as scope:
 # def encoder():
-    lstm = tf.contrib.rnn.LSTMCell(num_units = 1024)
-    state = lstm.zero_state(batch_size,"float")
+    lstm = mylstm(1024)
+    lstm0 = tf.contrib.rnn.LSTMCell(num_units = 1024)
+    state = lstm0.zero_state(batch_size,"float")
+    state = tf.reshape(state, [batch_size, -1])
     datum = tf.split(inp, frames, axis = 1)
-
+    
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
-        output, state = lstm(tf.reshape(datum[f], [batch_size,-1]), state)
+        temp = tf.reshape(datum[f], [batch_size,-1])
+        output, state = lstm(temp, state)
     output_decoder = output
     state_decoder = state
     output_future = output
@@ -132,7 +136,7 @@ with tf.Session() as sess:
     img_pre = [None]
     img = [None]
     img_future = [None]
-
+    
     for e in range(epochs):
         print(e)
         iteration.append(e)
@@ -142,7 +146,11 @@ with tf.Session() as sess:
 
         for i in range(num_batches):
             x_train = train_input_seq[i*batch_size:(i+1)*batch_size]
-
+            #state0, temp0 = sess.run([state, temp], feed_dict = {X: x_train})
+            
+            #print(np.shape(state0))
+            #print(np.shape(temp0))
+            
             y_train = train_output_seq[i*batch_size:(i+1)*batch_size]
             y_train_future = train_future_seq[i*batch_size:(i+1)*batch_size]
             batch_loss,batch_loss_future,train_optim,train_optim_future = sess.run([loss,loss_future,optim, optim_future],\
