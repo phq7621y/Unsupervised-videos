@@ -20,7 +20,7 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '/datasets/mnist_test_seq.npy' )
+    data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.reshape( data, [-1, 20, 64, 64, channel] )
