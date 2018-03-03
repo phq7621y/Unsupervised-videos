@@ -28,17 +28,17 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '../datasets/mnist_test_seq.npy' )
+    data = np.load( '/datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.reshape( data, [-1, 20, 64, 64, channel] )
     print("loading training data: data.shape", data.shape)
-    train_input_seq = data[0:500, 0:10]
-    train_output_seq = train_input_seq[0:500, ::-1]
-    train_future_seq = data[0:500, 10:]
+    train_input_seq = data[0:9900, 0:10]
+    train_output_seq = train_input_seq[0:, ::-1]
+    train_future_seq = data[0:9900, 10:]
 
     test_input_seq = data[9900:, 0:10]
-    test_output_seq = test_input_seq[9900:, ::-1]
+    test_output_seq = test_input_seq[0:, ::-1]
     test_future_seq = data[9900:,10:]
 
     return
@@ -151,6 +151,8 @@ with tf.Session() as sess:
     img_pre = [None]
     img = [None]
     img_future = [None]
+    tar = [None]
+    tar_future = [None]
     
     for e in range(epochs):
         print(e)
@@ -178,6 +180,8 @@ with tf.Session() as sess:
         avg_losses_future.append(total_loss_future/num_batches)
 
     img_pre = test_input_seq[0:batch_size]
+    tar = test_output_seq[0:batch_size]
+    tar_future = test_future_seq[0:batch_size]
     img, img_future = sess.run([decoder_outputs, future_outputs], feed_dict = {X: img_pre})
 
 print(iteration)
@@ -199,23 +203,32 @@ plt.show()
 plt.savefig('decoder_future.png')
 
 img_pre = np.reshape( img_pre, [batch_size, frames, 64, 64] )
+tar = np.reshape(tar, [batch_size, frames, 64, 64] )
+tar_future = np.reshape(tar_future, [batch_size, frames, 64, 64] )
 img = np.reshape( img, [batch_size, frames, 64, 64] )
 img_future = np.reshape( img_future, [batch_size, frames, 64, 64] )
 
 source = []
 reverse = []
 future = []
-
+tar_reverse = []
+tar_future_out = []
 for t in range(frames):
     source.append(img_pre[0,t])
+    tar_reverse.append(tar[0,t])
+    tar_future_out.append(tar_future[0,t])
     reverse.append(img[0,t])
     future.append(img_future[0,t])
 
 source = np.concatenate(source)
+tar_reverse = np.concatenate(tar_reverse)
+tar_future_out = np.concatenate(tar_future_out)
 reverse = np.concatenate(reverse)
 future = np.concatenate(future)
 
 plt.imsave("Source.png", source)
+plt.imsave("Target_Reverse.png", tar_reverse)
+plt.imsave("Target_Future.png", tar_future_out)
 plt.imsave("Reverse.png", reverse)
 plt.imsave("Future.png", future)
 
