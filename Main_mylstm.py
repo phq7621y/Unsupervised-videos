@@ -34,9 +34,9 @@ def load_data():
     data = np.swapaxes(data,0,1)
     data = np.reshape(data, [-1, 20, 64, 64, 1])
     print("loading training data: data.shape", np.shape(data))
-    train_input_seq = data[0:100, 0:10]
+    train_input_seq = data[0:9900, 0:10]
     train_output_seq = train_input_seq[0:, ::-1]
-    train_future_seq = data[0:100, 10:]
+    train_future_seq = data[0:9900, 10:]
 
     test_input_seq = data[9900:, 0:10]
     test_output_seq = test_input_seq[0:, ::-1]
