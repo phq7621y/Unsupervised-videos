@@ -23,11 +23,12 @@ def load_data():
     data = np.load( '/datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
-    data = np.reshape( data, [-1, 20, 64, 64, channel] )
-    print("loading training data: data.shape", data.shape)
-    train_input_seq = data[0:9900, 0:10]
+    data = np.swapaxes(data,0,1)
+    data = np.reshape(data, [-1, 20, 64, 64, 1])
+    print("loading training data: data.shape", np.shape(data))
+    train_input_seq = data[0:100, 0:10]
     train_output_seq = train_input_seq[0:, ::-1]
-    train_future_seq = data[0:9900, 10:]
+    train_future_seq = data[0:100, 10:]
 
     test_input_seq = data[9900:, 0:10]
     test_output_seq = test_input_seq[0:, ::-1]
@@ -39,7 +40,7 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 1000
+epochs = 0
 frames = 10
 lr = 0.01
 
@@ -197,11 +198,11 @@ future = []
 tar_reverse = []
 tar_future_out = []
 for t in range(frames):
-    source.append(img_pre[0,t])
-    tar_reverse.append(tar[0,t])
-    tar_future_out.append(tar_future[0,t])
-    reverse.append(img[0,t])
-    future.append(img_future[0,t])
+    source.append(img_pre[2,t])
+    tar_reverse.append(tar[2,t])
+    tar_future_out.append(tar_future[2,t])
+    reverse.append(img[2,t])
+    future.append(img_future[2,t])
 
 source = np.concatenate(source)
 tar_reverse = np.concatenate(tar_reverse)

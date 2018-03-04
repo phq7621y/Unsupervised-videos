@@ -27,15 +27,16 @@ channel = 1
 
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
-
+    
     data = np.load( '/datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
-    data = np.reshape( data, [-1, 20, 64, 64, channel] )
-    print("loading training data: data.shape", data.shape)
-    train_input_seq = data[0:9900, 0:10]
+    data = np.swapaxes(data,0,1)
+    data = np.reshape(data, [-1, 20, 64, 64, 1])
+    print("loading training data: data.shape", np.shape(data))
+    train_input_seq = data[0:100, 0:10]
     train_output_seq = train_input_seq[0:, ::-1]
-    train_future_seq = data[0:9900, 10:]
+    train_future_seq = data[0:100, 10:]
 
     test_input_seq = data[9900:, 0:10]
     test_output_seq = test_input_seq[0:, ::-1]
