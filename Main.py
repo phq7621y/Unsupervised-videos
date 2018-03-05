@@ -20,7 +20,7 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '/datasets/mnist_test_seq.npy' )
+    data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.swapaxes(data,0,1)
@@ -40,7 +40,7 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 1000
+epochs = 10
 frames = 10
 lr = 0.01
 
@@ -52,22 +52,22 @@ Y_future = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
 
 #
 c0 = tf.reshape(X,[-1, 64, 64, channel])
-c0 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
+c0 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv0")
 
-c1 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=1,activation = tf.nn.relu, strides=(1,1), \
+c1 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
 
-c2 = tf.layers.conv2d(inputs = c1,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2),\
+c2 = tf.layers.conv2d(inputs = c1,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1),\
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv2")
 
-c3 = tf.layers.conv2d(inputs = c2,filters=24,kernel_size=1,activation = tf.nn.relu, strides=(1,1), \
+c3 = tf.layers.conv2d(inputs = c2,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv3")
 
-c4 = tf.layers.conv2d(inputs = c3,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2),\
+c4 = tf.layers.conv2d(inputs = c3,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1),\
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv4")
 
-c5 = tf.layers.conv2d(inputs = c4,filters=24,kernel_size=1,activation = tf.nn.relu, strides=(1,1), \
+c5 = tf.layers.conv2d(inputs = c4,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv5")
 
 def fully_connected(input, reuse=False):
@@ -77,7 +77,7 @@ def fully_connected(input, reuse=False):
 
     return out
 
-inp = tf.reshape(c2, [batch_size, frames, -1])
+inp = tf.reshape(c5, [batch_size, frames, -1])
 
 #encoder
 with tf.variable_scope("Encoder") as scope:
@@ -100,7 +100,7 @@ zero_input = tf.zeros_like(tf.reshape( datum[0], [batch_size, -1] ) , "float" ) 
 
 with tf.variable_scope("Decoder") as scope:
     decoder_outputs = []
-
+    
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
@@ -111,7 +111,7 @@ decoder_outputs = fully_connected(decoder_outputs)
 
 with tf.variable_scope("FuturePredictor") as scope:
     future_outputs = []
-
+    
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
@@ -122,8 +122,8 @@ future_outputs = fully_connected(future_outputs, True)
 
 #loss and optimization
 #with tf.variable_scope("Loss") as scope:
-target = tf.reshape(tf.split(Y, frames, axis = 1), [batch_size, frames, -1])
-target_future = tf.reshape(tf.split(Y_future, frames, axis = 1), [batch_size, frames, -1])
+target = tf.reshape(Y, [batch_size, frames, -1])
+target_future = tf.reshape(Y_future, [batch_size, frames, -1])
 
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(target - decoder_outputs), axis=[1,2]))  #l2 loss
 loss_future = tf.reduce_mean(tf.reduce_sum(tf.square(target_future - future_outputs),axis = [1,2]))
@@ -167,9 +167,10 @@ with tf.Session() as sess:
     tar = test_output_seq[0:batch_size]
     tar_future = test_future_seq[0:batch_size]
     img, img_future = sess.run([decoder_outputs, future_outputs], feed_dict = {X: img_pre})
-
+    
 print(iteration)
 print(avg_losses)
+print(avg_losses_future)
 
 #plotting the loss
 plt.figure()
@@ -198,11 +199,11 @@ future = []
 tar_reverse = []
 tar_future_out = []
 for t in range(frames):
-    source.append(img_pre[2,t])
-    tar_reverse.append(tar[2,t])
-    tar_future_out.append(tar_future[2,t])
-    reverse.append(img[2,t])
-    future.append(img_future[2,t])
+    source.append(img_pre[1,t])
+    tar_reverse.append(tar[1,t])
+    tar_future_out.append(tar_future[1,t])
+    reverse.append(img[1,t])
+    future.append(img_future[1,t])
 
 source = np.concatenate(source)
 tar_reverse = np.concatenate(tar_reverse)
