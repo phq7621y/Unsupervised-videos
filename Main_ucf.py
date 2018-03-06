@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar  6 12:51:18 2018
+
+@author: Huy Pham
+"""
+
 import tensorflow as tf
 import numpy as np
 import pickle
@@ -15,47 +22,48 @@ train_future_seq = [None]
 test_input_seq = [None]
 test_output_seq = [None]
 test_future_seq = [None]
-channel = 1
+channel = 3
 
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( 'datasets/mnist_test_seq.npy' )
+    data = np.load( 'datasets/ucf101_sample_train_patches.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
-    data = np.swapaxes(data,0,1)
-    data = np.reshape(data, [-1, 20, 64, 64, 1])
+    
+    data = np.swapaxes(data,2,3)
+    data = np.swapaxes(data,3,4)
     print("loading training data: data.shape", np.shape(data))
-    train_input_seq = data[0:9900, 0:10]
+    train_input_seq = data[0:8900, 0:10]
     train_output_seq = train_input_seq[0:, ::-1]
-    train_future_seq = data[0:9900, 10:]
+    train_future_seq = data[0:8900, 10:]
 
-    test_input_seq = data[9900:, 0:10]
+    test_input_seq = data[8900:, 0:10]
     test_output_seq = test_input_seq[0:, ::-1]
-    test_future_seq = data[9900:,10:]
-
+    test_future_seq = data[8900:,10:]
+    
     return
 
 load_data()
 
 #parameters
 batch_size = 64
-epochs = 10
+epochs = 100
 frames = 10
 lr = 0.001
 
 #placeholders
 #enc_in = tf.placeholder()
-X = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
-Y = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
-Y_future = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
+X = tf.placeholder(tf.float32, [batch_size, frames, 32, 32, channel])
+Y = tf.placeholder(tf.float32, [batch_size, frames, 32, 32, channel])
+Y_future = tf.placeholder(tf.float32, [batch_size, frames, 32, 32, channel])
 
 #
 c0 = tf.reshape(X,[-1, 64, 64, channel])
 c0 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv0")
 
-c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
+c1 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
 
 c2 = tf.layers.conv2d(inputs = c1,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2),\
@@ -72,7 +80,7 @@ kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = 
 
 def fully_connected(input, reuse=False):
     with tf.variable_scope("fc", reuse=reuse):
-        out = tf.contrib.layers.fully_connected(input, 4096, activation_fn=None)
+        out = tf.contrib.layers.fully_connected(input, 3072, activation_fn=None)
         out = tf.reshape(out, [batch_size, frames, -1])
 
     return out
@@ -178,20 +186,20 @@ plt.plot(iteration, avg_losses)
 plt.ylabel("losses")
 plt.xlabel("epoch")
 plt.show()
-fig.savefig('decoder.png')
+fig.savefig('ucf_decoder.png')
 
-fig.figure()
+fig = plt.figure()
 plt.plot(iteration, avg_losses_future)
 plt.ylabel("losses")
 plt.xlabel("epoch")
 plt.show()
-fig.savefig('decoder_future.png')
+fig.savefig('ucf_decoder_future.png')
 
-img_pre = np.reshape( img_pre, [batch_size, frames, 64, 64] )
-tar = np.reshape(tar, [batch_size, frames, 64, 64] )
-tar_future = np.reshape(tar_future, [batch_size, frames, 64, 64] )
-img = np.reshape( img, [batch_size, frames, 64, 64] )
-img_future = np.reshape( img_future, [batch_size, frames, 64, 64] )
+img_pre = np.reshape( img_pre, [batch_size, frames, 32, 32, channel] )
+tar = np.reshape(tar, [batch_size, frames, 32, 32, channel])
+tar_future = np.reshape(tar_future, [batch_size, frames, 32, 32, channel])
+img = np.reshape( img, [batch_size, frames, 32, 32, channel])
+img_future = np.reshape( img_future, [batch_size, frames, 32, 32, channel])
 
 source = []
 reverse = []
@@ -211,30 +219,11 @@ tar_future_out = np.concatenate(tar_future_out)
 reverse = np.concatenate(reverse)
 future = np.concatenate(future)
 
-plt.imsave("Source.png", source)
-plt.imsave("Target_Reverse.png", tar_reverse)
-plt.imsave("Target_Future.png", tar_future_out)
-plt.imsave("Reverse.png", reverse)
-plt.imsave("Future.png", future)
+pic_reverse = np.rint(np.clip(reverse, 0, 255))
+pic_future = np.rint(np.clip(reverse, 0, 255))
 
-
-### goes in a file outside supercomputer
-# with open('avg_losses','rb') as al:
-#     avg_losses = pickle.load(al)
-#
-# with open('avg_losses_future','rb') as alf:
-#     avg_losses = pickle.load(alf)
-#
-# al.close()
-# alf.close()
-
-#
-# with open('avg_losses', 'wb') as al:
-#     pickle.dump(avg_losses, al)
-#
-#
-# with open('avg_losses_future', 'wb') as alf:
-#     pickle.dump(avg_losses_future, alf)
-#
-# al.close()
-# alf.close()
+plt.imsave("ucf_Source.png", source)
+plt.imsave("ucf_Target_Reverse.png", tar_reverse)
+plt.imsave("ucf_Target_Future.png", tar_future_out)
+plt.imsave("ucf_Reverse.png", pic_reverse.astype(np.uint8))
+plt.imsave("ucf_Future.png", pic_future.astype(np.uint8))
