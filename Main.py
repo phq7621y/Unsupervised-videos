@@ -100,7 +100,7 @@ zero_input = tf.zeros_like(tf.reshape( datum[0], [batch_size, -1] ) , "float" ) 
 
 with tf.variable_scope("Decoder") as scope:
     decoder_outputs = []
-    
+
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
@@ -111,7 +111,7 @@ decoder_outputs = fully_connected(decoder_outputs)
 
 with tf.variable_scope("FuturePredictor") as scope:
     future_outputs = []
-    
+
     for f in range(frames):
         if f > 0:
             scope.reuse_variables()
@@ -167,7 +167,7 @@ with tf.Session() as sess:
     tar = test_output_seq[0:batch_size]
     tar_future = test_future_seq[0:batch_size]
     img, img_future = sess.run([decoder_outputs, future_outputs], feed_dict = {X: img_pre})
-    
+
 print(iteration)
 print(avg_losses)
 print(avg_losses_future)
