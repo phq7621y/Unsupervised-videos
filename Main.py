@@ -20,7 +20,7 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( '../datasets/mnist_test_seq.npy' )
+    data = np.load( 'datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.swapaxes(data,0,1)
@@ -40,9 +40,9 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 20
+epochs = 100
 frames = 10
-lr = 0.001
+lr = 0.0001
 
 #placeholders
 #enc_in = tf.placeholder()
@@ -50,15 +50,15 @@ X = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
 Y = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
 Y_future = tf.placeholder(tf.float32, [batch_size, frames, 64, 64, channel])
 
-#
+
 c0 = tf.reshape(X,[-1, 64, 64, channel])
-c0 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
+c0 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv0")
 
-c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
-kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
+#c1 = tf.layers.conv2d(inputs = c0,filters=24,kernel_size=1,activation = tf.nn.relu, strides=(1,1), \
+#kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv1")
 
-c2 = tf.layers.conv2d(inputs = c1,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2),\
+c2 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2),\
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv2")
 
 c3 = tf.layers.conv2d(inputs = c2,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
@@ -70,9 +70,10 @@ kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = 
 c5 = tf.layers.conv2d(inputs = c4,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(2,2), \
 kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "d_conv5")
 
+
 def fully_connected(input, reuse=False):
     with tf.variable_scope("fc", reuse=reuse):
-        out = tf.contrib.layers.fully_connected(input, 4096, activation_fn=None)
+        out = tf.contrib.layers.fully_connected(input, 4096)
         out = tf.reshape(out, [batch_size, frames, -1])
 
     return out
