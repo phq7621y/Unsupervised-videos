@@ -20,7 +20,7 @@ channel = 1
 def load_data():
     global train_input_seq, train_output_seq, train_future_seq, test_input_seq, test_output_seq, test_future_seq
 
-    data = np.load( 'datasets/mnist_test_seq.npy' )
+    data = np.load( '../datasets/mnist_test_seq.npy' )
     # ['clips', 'dims', 'input_raw_data']
     #(200K, 1, 64, 64) --> (10K, 20, 64, 64)-> number of sequences, frames/sequence, height, width
     data = np.swapaxes(data,0,1)
@@ -40,7 +40,7 @@ load_data()
 
 #parameters
 batch_size = 64
-epochs = 10
+epochs = 20
 frames = 10
 lr = 0.001
 
@@ -77,7 +77,7 @@ def fully_connected(input, reuse=False):
 
     return out
 
-inp = tf.reshape(c5, [batch_size, frames, -1])
+inp = tf.reshape(c2, [batch_size, frames, -1])
 
 #encoder
 with tf.variable_scope("Encoder") as scope:
@@ -180,7 +180,7 @@ plt.xlabel("epoch")
 plt.show()
 fig.savefig('decoder.png')
 
-fig.figure()
+fig = plt.figure()
 plt.plot(iteration, avg_losses_future)
 plt.ylabel("losses")
 plt.xlabel("epoch")
